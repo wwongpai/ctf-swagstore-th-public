@@ -43,7 +43,7 @@ spec:
                         }]
           }]
         ad.datadoghq.com/tags: '{"git.commit.sha": "41b010236b379372e4b8143d2e96f0e2d71c1b9e",
-                 "git.repository_url": "https://github.com/dd-japan/swagstore", "git.branch": "2025-1H"}'
+                 "git.repository_url": "https://github.com/dd-japan/ctf-swagstore", "git.branch": "2025-1H"}'
     spec:
       serviceAccountName: default
       terminationGracePeriodSeconds: 5

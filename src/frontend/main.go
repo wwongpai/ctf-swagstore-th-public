@@ -30,7 +30,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	// "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -243,17 +243,19 @@ func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	if os.Getenv("ENABLE_TRACING") == "1" {
 		*conn, err = grpc.DialContext(ctx, addr,
 			grpc.WithInsecure(),
-			grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
-			grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()))
+			grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(grpctrace.WithServiceName("frontend"))),
+            grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(grpctrace.WithServiceName("frontend"))))
+			// grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+			// grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()))
 	} else {
 		// Create the client interceptor using the grpc trace package.
 		si := grpctrace.StreamClientInterceptor(grpctrace.WithServiceName("frontend"))
 		ui := grpctrace.UnaryClientInterceptor(grpctrace.WithServiceName("frontend"))
 		*conn, err = grpc.DialContext(ctx, addr,
-			grpc.WithInsecure(),
+		 	grpc.WithInsecure(),
 			grpc.WithUnaryInterceptor(ui),
 			grpc.WithStreamInterceptor(si))
-	}
+	 }
 	if err != nil {
 		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
 	}

@@ -130,6 +130,10 @@ spec:
         #  value: '[{"service": "*", "sample_rate": 0.2}]'
         - name: DD_RUNTIME_METRICS_ENABLED
           value: "true"
+        - name: DD_JMXFETCH_STATSD_HOST
+          value: "unix:///var/run/datadog/dsd.socket"
+        #- name: DD_DOGSTATSD_URL
+        #  value: "unix:///var/datadog-agent/dsd.socket"
         - name: JAVA_OPTS
           value: >-
               -Dcom.sun.management.jmxremote
@@ -140,12 +144,15 @@ spec:
               -Dcom.sun.management.jmxremote.rmi.port=8081
               -Djava.rmi.server.hostname=$(POD_IP)
               -Ddd.profiling.directallocation.enabled=true
-
         #- name: DD_ENTITY_ID
         #  valueFrom:
         #    fieldRef:
         #      fieldPath: metadata.uid
-        #- name: DD_AGENT_HOST
+        - name: DD_AGENT_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        #- name: HOST_IP
         #  valueFrom:
         #    fieldRef:
         #      fieldPath: status.hostIP
@@ -159,7 +166,11 @@ spec:
         #volumeMounts:
         #  - name: jmx-config-map
         #    mountPath: /etc/datadog-agent/conf.d/jmx.d
-      #volumes:
+      ##volumes:
+      #- name: datadog
+      #  hostPath:
+      #    path: /var/datadog
+      #    type: DirectoryOrCreate
       #  - name: jmx-config-map
       #    configMap:
       #      name: jmx-config-map

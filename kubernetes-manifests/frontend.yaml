@@ -102,6 +102,10 @@ spec:
             value: "true"
           - name: DD_TRACE_SAMPLING_RULES
             value: '[{"service": "frontend", "sample_rate": 0.9}]'
+          - name: DD_APPSEC_ENABLED
+            value: "true"
+          - name: DD_APPSEC_SCA_ENABLED
+            value: "true"
           resources:
             requests:
               cpu: 100m

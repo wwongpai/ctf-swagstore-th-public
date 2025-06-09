@@ -16,6 +16,7 @@
 
 {{ define "product" }}
 {{ template "header" . }}
+
 <div {{ with $.platform_css }} class="{{.}}" {{ end }}>
   <span class="platform-flag">
     {{$.platform_name}}
