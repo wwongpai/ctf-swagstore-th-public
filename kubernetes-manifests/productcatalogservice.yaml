@@ -35,6 +35,7 @@ spec:
       annotations:
         ad.datadoghq.com/tags: '{"git.commit.sha": "ba963843f0b5d1c540ddb6d07103c03a7e2fd7c9",
          "git.repository_url": "https://github.com/dd-japan/swagstore", "git.branch": "prototype-for-kddi"}'
+        ad.datadoghq.com/server.logs: '[{"source": "go", "service": "productcatalogservice"}]'
     spec:
       serviceAccountName: default
       terminationGracePeriodSeconds: 5
@@ -45,14 +46,14 @@ spec:
         runAsUser: 1000
       containers:
       - name: server
-        # securityContext:
-          # allowPrivilegeEscalation: false
-          # capabilities:
-          #   drop:
-          #     - all
-          # privileged: false
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - all
+          privileged: false
           # readOnlyRootFilesystem: true
-        image: productcatalogservice
+        image: ghcr.io/dd-japan/ctf-swagstore/productcatalogservice:latest
         ports:
         - containerPort: 3550
         env:

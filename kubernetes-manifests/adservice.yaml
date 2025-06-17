@@ -34,6 +34,7 @@ spec:
         admission.datadoghq.com/enabled: "true"
       annotations:
         admission.datadoghq.com/java-lib.version: "latest"
+        ad.datadoghq.com/server.logs: '[{"source": "java", "service": "adservice"}]'         
         ad.datadoghq.com/server.checks: |
           {
             "jmx": {
@@ -98,7 +99,7 @@ spec:
               - all
           privileged: false
         #   readOnlyRootFilesystem: true
-        image: adservice
+        image: ghcr.io/dd-japan/ctf-swagstore/adservice:latest
         ports:
         - containerPort: 9555
         - name: jmx-metrics

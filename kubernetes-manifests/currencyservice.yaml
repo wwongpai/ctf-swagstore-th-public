@@ -34,6 +34,7 @@ spec:
         admission.datadoghq.com/enabled: "true"
       annotations:
         admission.datadoghq.com/js-lib.version: "latest"
+        ad.datadoghq.com/server.logs: '[{"source": "nodejs", "service": "currencyservice"}]'        
     spec:
       serviceAccountName: default
       terminationGracePeriodSeconds: 5
@@ -51,7 +52,7 @@ spec:
               - all
           privileged: false
           # readOnlyRootFilesystem: true
-        image: currencyservice
+        image: ghcr.io/dd-japan/ctf-swagstore/currencyservice:latest
         ports:
         - name: grpc
           containerPort: 7000
