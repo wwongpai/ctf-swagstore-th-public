@@ -52,7 +52,7 @@ spec:
               - all
           privileged: false
           # readOnlyRootFilesystem: true
-        image: ghcr.io/keisukesakasai/ctf-swagstore/currencyservice:latest
+        image: ghcr.io/dd-japan/ctf-swagstore/currencyservice:latest
         ports:
         - name: grpc
           containerPort: 7000

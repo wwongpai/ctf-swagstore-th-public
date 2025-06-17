@@ -99,7 +99,7 @@ spec:
               - all
           privileged: false
         #   readOnlyRootFilesystem: true
-        image: ghcr.io/keisukesakasai/ctf-swagstore/adservice:latest
+        image: ghcr.io/dd-japan/ctf-swagstore/adservice:latest
         ports:
         - containerPort: 9555
         - name: jmx-metrics

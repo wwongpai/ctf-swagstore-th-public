@@ -68,7 +68,7 @@ spec:
               - all
           privileged: false
           readOnlyRootFilesystem: true
-        image: ghcr.io/keisukesakasai/ctf-swagstore/loadgenerator:latest
+        image: ghcr.io/dd-japan/ctf-swagstore/loadgenerator:latest
         env:
         - name: FRONTEND_ADDR
           value: "frontend:80"

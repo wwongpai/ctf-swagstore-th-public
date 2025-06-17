@@ -61,7 +61,7 @@ spec:
               - all
           privileged: false
           # readOnlyRootFilesystem: true
-        image: ghcr.io/keisukesakasai/ctf-swagstore/paymentservice:latest
+        image: ghcr.io/dd-japan/ctf-swagstore/paymentservice:latest
         ports:
         - containerPort: 50051
         env:
