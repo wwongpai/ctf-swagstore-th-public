@@ -58,7 +58,6 @@ spec:
         env:
         - name: FRONTEND_ADDR
           value: "frontend:80"
-
       containers:
       - name: main
         securityContext:
