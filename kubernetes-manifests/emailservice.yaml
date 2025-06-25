@@ -34,6 +34,7 @@ spec:
         admission.datadoghq.com/enabled: "true"
       annotations:
         admission.datadoghq.com/python-lib.version: "latest"
+        ad.datadoghq.com/server.logs: '[{"source": "python", "service": "emailservice"}]'
     spec:
       serviceAccountName: default
       terminationGracePeriodSeconds: 5
@@ -51,7 +52,7 @@ spec:
         #       - all
         #   privileged: false
         #   readOnlyRootFilesystem: true
-        image: emailservice
+        image: ghcr.io/dd-japan/ctf-swagstore/emailservice:latest
         ports:
         - containerPort: 8080
         env:
