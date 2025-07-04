@@ -52,7 +52,8 @@ spec:
         #       - all
         #   privileged: false
         #   readOnlyRootFilesystem: true
-        image: ghcr.io/dd-japan/ctf-swagstore/recommendationservice:latest
+        #image: ghcr.io/dd-japan/ctf-swagstore/recommendationservice:latest
+        image: recommendationservice
         ports:
         - containerPort: 8080
         # readinessProbe:

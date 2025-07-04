@@ -51,7 +51,8 @@ spec:
                 - all
             privileged: false
             # readOnlyRootFilesystem: true
-          image: ghcr.io/dd-japan/ctf-swagstore/frontend:latest
+          #image: ghcr.io/dd-japan/ctf-swagstore/frontend:latest
+          image: frontend
           ports:
           - containerPort: 8080
           readinessProbe:
@@ -107,6 +108,8 @@ spec:
             value: "true"
           - name: DD_APPSEC_SCA_ENABLED
             value: "true"
+          - name: DD_DBM_PROPAGATION_MODE
+            value: "full"
           resources:
             requests:
               cpu: 400m
