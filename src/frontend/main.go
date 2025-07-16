@@ -176,8 +176,7 @@ func main() {
 	r.HandleFunc("/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
 
 	// New login routes
-    r.HandleFunc("/login", loginPage).Methods(http.MethodGet) // Login page
-    r.HandleFunc("/login", loginHandler).Methods(http.MethodPost) // Login action (legacy form-based)
+    r.HandleFunc("/login", loginHandler).Methods(http.MethodPost, http.MethodGet) // Login handler - supports both GET (page) and POST/GET (action)
     r.HandleFunc("/api/login", loginAPIHandler).Methods(http.MethodPost) // JSON API for Ajax
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
@@ -209,7 +208,7 @@ func init() {
 	// データベース接続の初期化
 	// var err error
 	// PostgreSQL接続情報を設定
-	// connStr := "host=34.146.4.35 port=5432 user=postgres password=password dbname=userdb sslmode=disable"
+	// connStr := "host=postgres port=5432 user=postgres password=password dbname=userdb sslmode=disable"
 	// db, err = sqltrace.Open("postgres", connStr, sqltrace.WithDBMPropagation(tracer.DBMPropagationModeFull))
 	// if err != nil {
 	//	logrus.Fatal("データベース接続エラー:", err)
@@ -257,6 +256,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	
+	// GETメソッドでパラメータがない場合は、ログインページを表示
+	if r.Method == "GET" && username == "" && password == "" {
+		loginPage(w, r)
+		return
+	}
+	
 	// ユーザー名をタグに追加（セキュリティ上、実際の値は避ける場合もあります）
 	span.SetTag("user.username", username)
 
@@ -270,7 +275,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     
     // DB接続情報をタグに追加
     spanConnect.SetTag("db.type", "postgresql")
-    spanConnect.SetTag("db.host", "34.146.4.35")
+    spanConnect.SetTag("db.host", "postgres")
     spanConnect.SetTag("db.port", "5432")
     spanConnect.SetTag("db.name", "userdb")
     spanConnect.SetTag("db.instance", "userdb")
@@ -278,7 +283,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     spanConnect.SetTag("env", "ctf")
     spanConnect.SetTag("service", "frontend")
 
-    connStr := "host=34.146.4.35 port=5432 user=postgres password=password dbname=userdb sslmode=disable"
+    connStr := "host=postgres port=5432 user=postgres password=password dbname=userdb sslmode=disable"
     db, err := sqltrace.Open("postgres", connStr, 
         sqltrace.WithDBMPropagation(tracer.DBMPropagationModeFull),
         sqltrace.WithServiceName("postgres"),
@@ -315,7 +320,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     spanBegin1.SetTag("db.type", "postgresql")
     spanBegin1.SetTag("db.instance", "userdb")
     spanBegin1.SetTag("db.user", "postgres")
-    spanBegin1.SetTag("db.host", "34.146.4.35")
+    spanBegin1.SetTag("db.host", "postgres")
     spanBegin1.SetTag("db.port", "5432")
     spanBegin1.SetTag("env", "ctf")
     spanBegin1.SetTag("service", "frontend")
@@ -338,7 +343,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     spanLock.SetTag("db.type", "postgresql")
     spanLock.SetTag("db.instance", "userdb")
     spanLock.SetTag("db.user", "postgres")
-    spanLock.SetTag("db.host", "34.146.4.35")
+    spanLock.SetTag("db.host", "postgres")
     spanLock.SetTag("db.port", "5432")
     spanLock.SetTag("env", "ctf")
     spanLock.SetTag("service", "frontend")
@@ -362,7 +367,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     spanBegin2.SetTag("db.type", "postgresql")
     spanBegin2.SetTag("db.instance", "userdb")
     spanBegin2.SetTag("db.user", "postgres")
-    spanBegin2.SetTag("db.host", "34.146.4.35")
+    spanBegin2.SetTag("db.host", "postgres")
     spanBegin2.SetTag("db.port", "5432")
     spanBegin2.SetTag("env", "ctf")
     spanBegin2.SetTag("service", "frontend")
@@ -386,7 +391,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     spanQuery.SetTag("db.type", "postgresql")
     spanQuery.SetTag("db.instance", "userdb")
     spanQuery.SetTag("db.user", "postgres")
-    spanQuery.SetTag("db.host", "34.146.4.35")
+    spanQuery.SetTag("db.host", "postgres")
     spanQuery.SetTag("db.port", "5432")
     spanQuery.SetTag("env", "ctf")
     spanQuery.SetTag("service", "frontend")
@@ -453,7 +458,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     spanCommit1.SetTag("db.type", "postgresql")
     spanCommit1.SetTag("db.instance", "userdb")
     spanCommit1.SetTag("db.user", "postgres")
-    spanCommit1.SetTag("db.host", "34.146.4.35")
+    spanCommit1.SetTag("db.host", "postgres")
     spanCommit1.SetTag("db.port", "5432")
     spanCommit1.SetTag("env", "ctf")
     spanCommit1.SetTag("service", "frontend")
@@ -476,7 +481,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // �� FIX: 認証チェック（新しいパターン）
+    // 🔧 FIX: 認証チェック（新しいパターン）
     authenticated := false
     for _, result := range results {
         log.Printf("🚨 Checking user: %s with password: %s against input password: %s", result.Username, result.Password, password)
@@ -503,7 +508,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     spanCommit2.SetTag("db.type", "postgresql")
     spanCommit2.SetTag("db.instance", "userdb")
     spanCommit2.SetTag("db.user", "postgres")
-    spanCommit2.SetTag("db.host", "34.146.4.35")
+    spanCommit2.SetTag("db.host", "postgres")
     spanCommit2.SetTag("db.port", "5432")
     spanCommit2.SetTag("env", "ctf")
     spanCommit2.SetTag("service", "frontend")
@@ -610,7 +615,7 @@ func loginAPIHandler(w http.ResponseWriter, r *http.Request) {
     
     // DB接続情報をタグに追加
     spanConnect.SetTag("db.type", "postgresql")
-    spanConnect.SetTag("db.host", "34.146.4.35")
+    spanConnect.SetTag("db.host", "postgres")
     spanConnect.SetTag("db.port", "5432")
     spanConnect.SetTag("db.name", "userdb")
     spanConnect.SetTag("db.instance", "userdb")
@@ -618,7 +623,7 @@ func loginAPIHandler(w http.ResponseWriter, r *http.Request) {
     spanConnect.SetTag("env", "ctf")
     spanConnect.SetTag("service", "frontend")
 
-    connStr := "host=34.146.4.35 port=5432 user=postgres password=password dbname=userdb sslmode=disable"
+    connStr := "host=postgres port=5432 user=postgres password=password dbname=userdb sslmode=disable"
     db, err := sqltrace.Open("postgres", connStr, 
         sqltrace.WithDBMPropagation(tracer.DBMPropagationModeFull),
         sqltrace.WithServiceName("postgres"),
@@ -665,7 +670,7 @@ func loginAPIHandler(w http.ResponseWriter, r *http.Request) {
     spanBegin1.SetTag("db.type", "postgresql")
     spanBegin1.SetTag("db.instance", "userdb")
     spanBegin1.SetTag("db.user", "postgres")
-    spanBegin1.SetTag("db.host", "34.146.4.35")
+    spanBegin1.SetTag("db.host", "postgres")
     spanBegin1.SetTag("db.port", "5432")
     spanBegin1.SetTag("env", "ctf")
     spanBegin1.SetTag("service", "frontend")
@@ -693,7 +698,7 @@ func loginAPIHandler(w http.ResponseWriter, r *http.Request) {
     spanLock.SetTag("db.type", "postgresql")
     spanLock.SetTag("db.instance", "userdb")
     spanLock.SetTag("db.user", "postgres")
-    spanLock.SetTag("db.host", "34.146.4.35")
+    spanLock.SetTag("db.host", "postgres")
     spanLock.SetTag("db.port", "5432")
     spanLock.SetTag("env", "ctf")
     spanLock.SetTag("service", "frontend")
@@ -721,7 +726,7 @@ func loginAPIHandler(w http.ResponseWriter, r *http.Request) {
     spanBegin2.SetTag("db.type", "postgresql")
     spanBegin2.SetTag("db.instance", "userdb")
     spanBegin2.SetTag("db.user", "postgres")
-    spanBegin2.SetTag("db.host", "34.146.4.35")
+    spanBegin2.SetTag("db.host", "postgres")
     spanBegin2.SetTag("db.port", "5432")
     spanBegin2.SetTag("env", "ctf")
     spanBegin2.SetTag("service", "frontend")
@@ -750,7 +755,7 @@ func loginAPIHandler(w http.ResponseWriter, r *http.Request) {
     spanQuery.SetTag("db.type", "postgresql")
     spanQuery.SetTag("db.instance", "userdb")
     spanQuery.SetTag("db.user", "postgres")
-    spanQuery.SetTag("db.host", "34.146.4.35")
+    spanQuery.SetTag("db.host", "postgres")
     spanQuery.SetTag("db.port", "5432")
     spanQuery.SetTag("env", "ctf")
     spanQuery.SetTag("service", "frontend")
@@ -809,7 +814,7 @@ func loginAPIHandler(w http.ResponseWriter, r *http.Request) {
     spanCommit1.SetTag("db.type", "postgresql")
     spanCommit1.SetTag("db.instance", "userdb")
     spanCommit1.SetTag("db.user", "postgres")
-    spanCommit1.SetTag("db.host", "34.146.4.35")
+    spanCommit1.SetTag("db.host", "postgres")
     spanCommit1.SetTag("db.port", "5432")
     spanCommit1.SetTag("env", "ctf")
     spanCommit1.SetTag("service", "frontend")
@@ -861,7 +866,7 @@ func loginAPIHandler(w http.ResponseWriter, r *http.Request) {
     spanCommit2.SetTag("db.type", "postgresql")
     spanCommit2.SetTag("db.instance", "userdb")
     spanCommit2.SetTag("db.user", "postgres")
-    spanCommit2.SetTag("db.host", "34.146.4.35")
+    spanCommit2.SetTag("db.host", "postgres")
     spanCommit2.SetTag("db.port", "5432")
     spanCommit2.SetTag("env", "ctf")
     spanCommit2.SetTag("service", "frontend")
