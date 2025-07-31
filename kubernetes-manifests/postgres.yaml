@@ -27,7 +27,7 @@ kind: ConfigMap
 metadata:
   name: postgres-config
 data:
-  database: userdb
+  database: swagstoredb
   postgresql.conf: |
     # Basic configuration
     listen_addresses = '*'
@@ -61,14 +61,14 @@ data:
     
     echo "PostgreSQL is ready. Creating database and tables..."
     
-    # Create userdb database if it doesn't exist
+    # Create swagstoredb database if it doesn't exist
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-    SELECT 'CREATE DATABASE userdb'
-    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'userdb');
+    SELECT 'CREATE DATABASE swagstoredb'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'swagstoredb');
     \gexec
     EOSQL
     
-    echo "Database userdb created or already exists."
+    echo "Database swagstoredb created or already exists."
     
     # Configure the default postgres database for Datadog DBM
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
@@ -134,14 +134,14 @@ data:
     
     echo "Default postgres database configured for Datadog DBM."
     
-    # Configure the userdb database for Datadog DBM
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "userdb" <<-EOSQL
+    # Configure the swagstoredb database for Datadog DBM
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "swagstoredb" <<-EOSQL
     
     -- Enable pg_stat_statements extension for Datadog DBM
     CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
     
-    -- Grant necessary permissions for Datadog DBM on userdb
-    GRANT CONNECT ON DATABASE userdb TO datadog;
+    -- Grant necessary permissions for Datadog DBM on swagstoredb
+    GRANT CONNECT ON DATABASE swagstoredb TO datadog;
     
     -- Grant schema permissions first
     GRANT USAGE ON SCHEMA public TO datadog;
@@ -175,7 +175,7 @@ data:
     RETURNS NULL ON NULL INPUT
     SECURITY DEFINER;
     
-    -- FIRST: Create application tables
+    -- Create application tables
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       username VARCHAR(255) UNIQUE NOT NULL,
@@ -193,72 +193,71 @@ data:
     INSERT INTO users (username, password) VALUES 
       ('ctf', 'flag{sql_injection_detected}') ON CONFLICT (username) DO NOTHING;
     
-    -- NOW: Create user_activities table (after users table exists)
-    CREATE TABLE IF NOT EXISTS user_activities (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id),
-      activity_type VARCHAR(50) NOT NULL,
-      activity_data JSONB,
-      ip_address INET,
+    -- 商品テーブル（productcatalogservice用）
+    CREATE TABLE IF NOT EXISTS products (
+      id VARCHAR(50) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      picture VARCHAR(255),
+      price_usd_units INTEGER NOT NULL,
+      price_usd_nanos INTEGER NOT NULL,
+      categories TEXT[],
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     
-    -- 大量のテストデータを挿入（意図的にインデックスなし）
-    INSERT INTO user_activities (user_id, activity_type, activity_data, ip_address, created_at)
-    SELECT 
-      (random() * 4 + 1)::INTEGER,
-      CASE (random() * 4)::INTEGER
-        WHEN 0 THEN 'login'
-        WHEN 1 THEN 'logout'  
-        WHEN 2 THEN 'view_page'
-        ELSE 'purchase'
-      END,
-      ('{"page": "page_' || (random() * 100)::INTEGER || '", "duration": ' || (random() * 1000)::INTEGER || '}')::JSONB,
-      ('192.168.1.' || (random() * 255)::INTEGER)::INET,
-      NOW() - (random() * interval '30 days')
-    FROM generate_series(1, 50000);
+    -- 商品データを挿入
+    INSERT INTO products (id, name, description, picture, price_usd_units, price_usd_nanos, categories) VALUES
+      ('0PUK6V6EV0', 'Dog Headphones', 'You feel it the minute you put them on. The soft, plush cushions seal you in.', '/static/img/products/headphones.jpg', 229, 990000000, ARRAY['accessories']),
+      ('1YMWWN1N4O', 'Dog Steel Bottle', 'NoLimit - robust stainless steel vacuum flask including sports lid.', '/static/img/products/steel-bottle.jpg', 35, 970000000, ARRAY['accessories']),
+      ('2ZYFJ3GM2N', 'Dog T-shirt', 'Perfectly cropped cotton t-shirt. Short sleeves.', '/static/img/products/t-shirt.jpg', 29, 990000000, ARRAY['clothing', 't-shirt']),
+      ('66VCHSJNUP', 'Dog T-shirt I love you', 'Perfectly cropped cotton t-shirt. Short sleeves.', '/static/img/products/t-shirt-i-love-u.jpg', 29, 990000000, ARRAY['clothing', 't-shirt']),
+      ('6E92ZMYYFZ', 'Dog Sweatshirt gray', 'Perfectly cropped cotton sweatshirt. Long sleeves.', '/static/img/products/sweatshirt-gray.jpg', 39, 990000000, ARRAY['clothing', 'sweatshirt']),
+      ('9SIQT8TOJO', 'Dog Sweatshirt black', 'Perfectly cropped cotton sweatshirt. Long sleeves.', '/static/img/products/sweatshirt-black.jpg', 45, 990000000, ARRAY['clothing', 'sweatshirt']),
+      ('OLJCESPC7Z', 'Dog Notebook', 'The perfect companion for taking notes during your meetings.', '/static/img/products/notebook.jpg', 19, 990000000, ARRAY['accessories', 'office']),
+      ('L9ECAV7KIM', 'Dog SKO Notebook', 'The perfect companion for taking notes during SKOs.', '/static/img/products/sko-notebook.jpg', 19, 990000000, ARRAY['accessories', 'office']),
+      ('LS4PSXUNUM', 'Dog Mug', 'A simple mug with a nice branding.', '/static/img/products/mug.jpg', 8, 990000000, ARRAY['kitchen']);
     
-    -- 遅いクエリを定期的に実行する関数
-    CREATE OR REPLACE FUNCTION simulate_slow_queries()
+    -- 遅いクエリを実行する関数（商品検索用）
+    CREATE OR REPLACE FUNCTION simulate_slow_product_queries()
     RETURNS VOID AS \$\$
     DECLARE
         dummy_record RECORD;
     BEGIN
-        -- 遅いクエリ1: 日付範囲検索（created_atにインデックスなし）
+        -- 遅いクエリ1: カテゴリでの検索（インデックスなし）
         FOR dummy_record IN
-            SELECT ua.activity_type, ua.created_at, u.username
-            FROM user_activities ua
-            JOIN users u ON ua.user_id = u.id
-            WHERE ua.created_at >= NOW() - INTERVAL '7 days'
-            ORDER BY ua.created_at DESC
+            SELECT p.id, p.name, p.description, p.price_usd_units, p.price_usd_nanos
+            FROM products p
+            WHERE 'clothing' = ANY(p.categories)
+            ORDER BY p.price_usd_units DESC
             LIMIT 10
         LOOP
             -- 何もしない
         END LOOP;
         
-        -- 遅いクエリ2: activity_typeでの検索（インデックスなし）
+        -- 遅いクエリ2: 商品名での部分一致検索（インデックスなし）
         FOR dummy_record IN
-            SELECT COUNT(*) 
-            FROM user_activities 
-            WHERE activity_type = 'login' 
-            AND created_at >= NOW() - INTERVAL '1 day'
+            SELECT p.id, p.name, p.description
+            FROM products p
+            WHERE LOWER(p.name) LIKE '%dog%'
+            OR LOWER(p.description) LIKE '%dog%'
+            ORDER BY p.name
         LOOP
             -- 何もしない
         END LOOP;
     END;
     \$\$ LANGUAGE plpgsql;
     
-    -- NOW grant permissions on the created tables
+    -- 権限を付与
     GRANT SELECT ON public.users TO datadog;
-    GRANT SELECT ON public.user_activities TO datadog;
+    GRANT SELECT ON public.products TO datadog;
     
-    -- Verify table creation
+    -- 確認
     SELECT 'Table users created successfully with ' || COUNT(*) || ' records' FROM users;
-    SELECT 'Table user_activities created successfully with ' || COUNT(*) || ' records' FROM user_activities;
+    SELECT 'Table products created successfully with ' || COUNT(*) || ' records' FROM products;
     
     EOSQL
     
-    echo "Database initialization completed successfully."
+    echo "SwagStore database initialization completed successfully."
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -284,37 +283,6 @@ spec:
     metadata:
       labels:
         app: postgres
-      # annotations:
-      #   ad.datadoghq.com/postgres.checks: |
-      #     {
-      #       "postgres": {
-      #         "init_config": {},
-      #         "instances": [
-      #           {
-      #             "dbm": true,
-      #             "host": "postgres",
-      #             "port": 5432,
-      #             "username": "datadog",
-      #             "password": "datadog",
-      #             "dbname": "userdb",
-      #             "disable_generic_tags": false,
-      #             "aurora": false,
-      #             "query_samples": {
-      #               "enabled": true,
-      #               "collection_interval": 5
-      #             },
-      #             "collect_schemas": {
-      #               "enabled": true
-      #             },
-      #             "relations": [
-      #               {
-      #                 "relation_regex": ".*"
-      #               }
-      #             ]
-      #           }
-      #         ]
-      #       }
-      #     }
     spec:
       securityContext:
         runAsUser: 999
@@ -433,7 +401,7 @@ metadata:
               "port": 5432,
               "username": "datadog",
               "password": "datadog",
-              "dbname": "userdb",
+              "dbname": "swagstoredb",
               "collect_schemas": {
                 "enabled": true
               },
@@ -453,52 +421,4 @@ spec:
   ports:
   - name: tcp-postgres
     port: 5432
-    targetPort: 5432
----
-#apiVersion: v1
-#kind: ConfigMap
-#metadata:
-#  name: datadog-postgres-config
-#data:
-#  postgres.yaml: |
-#    init_config:
-#    instances:
-#    - host: postgres
-#      port: 5432
-#      username: datadog
-#      password: datadog
-#      dbname: userdb
-#      dbm: true
-#      # PostgreSQL 15対応の完全設定
-#      collect_function_metrics: true
-#      collect_count_metrics: true
-#      collect_activity_metrics: true
-#      collect_database_size_metrics: true
-#      collect_default_database: true
-#      # DBM設定
-#      query_metrics:
-#        enabled: true
-#        run_sync: true
-#        collection_interval: 10
-#      query_activity:
-#        enabled: true
-#        collection_interval: 10
-#      query_samples:
-#        enabled: true
-#        collection_interval: 10
-#      explain_function: datadog.explain_statement
-#      explain_parameterized_queries: true
-#      settings:
-#        enabled: true
-#        collection_interval: 600
-#      schemas:
-#        enabled: true
-#        collection_interval: 600
-#      resources:
-#        enabled: true
-#        collection_interval: 600
-#      tags:
-#        - service:postgres
-#        - env:ctf
-#        - cluster:swagstore
-#        - postgresql_version:15 
+    targetPort: 5432 

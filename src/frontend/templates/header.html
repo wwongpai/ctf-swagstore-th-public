@@ -393,10 +393,11 @@
           defaultPrivacyLevel: 'mask-user-input',
           // APMとの自動Correlation設定
           allowedTracingUrls: [
-              '/api/login',                           // 文字列で指定（推奨）
+              '/api/login',                           // ログインAPI
+              '/api/product/',                        // 商品詳細API
               (url) => {
                   console.log('🔍 RUM checking URL for tracing:', url);
-                  const shouldTrace = url.includes('/api/login');
+                  const shouldTrace = url.includes('/api/login') || url.includes('/api/product/');
                   console.log('✅ Should trace:', shouldTrace);
                   return shouldTrace;
               }

@@ -266,12 +266,11 @@ func (cs *checkoutService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.H
 }
 
 func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
-    span, _ := tracer.StartSpanFromContext(ctx, "PlaceOrder")
-    defer span.Finish()
+	span, ctx := tracer.StartSpanFromContext(ctx, "PlaceOrder")  // コンテキストを更新
+	defer span.Finish()
 
-    traceID := span.Context().TraceID()
+	traceID := span.Context().TraceID()
 	log.Infof("[PlaceOrder] user_id=%q user_currency=%q dd.trace_id=%d", req.UserId, req.UserCurrency, traceID)
-
 
 	orderID, err := uuid.NewUUID()
 	if err != nil {
