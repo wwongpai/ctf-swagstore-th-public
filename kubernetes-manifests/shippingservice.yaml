@@ -50,7 +50,7 @@ spec:
               - all
           privileged: false
           # readOnlyRootFilesystem: true
-        image: ghcr.io/dd-japan/ctf-swagstore/shippingservice:latest
+        image: gcr.io/google-samples/microservices-demo/shippingservice:v0.10.1
         #image: shippingservice
         ports:
         - containerPort: 50051

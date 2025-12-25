@@ -52,7 +52,7 @@ spec:
               - all
           privileged: false
           # readOnlyRootFilesystem: true
-        image: ghcr.io/dd-japan/ctf-swagstore/currencyservice:latest
+        image: gcr.io/google-samples/microservices-demo/currencyservice:v0.10.1
         #image: currencyservice
         ports:
         - name: grpc

@@ -53,7 +53,7 @@ spec:
               - all
           privileged: false
           # readOnlyRootFilesystem: true
-        image: ghcr.io/dd-japan/ctf-swagstore/productcatalogservice:latest
+        image: gcr.io/google-samples/microservices-demo/productcatalogservice:v0.10.1
         #image: productcatalogservice
         ports:
         - containerPort: 3550

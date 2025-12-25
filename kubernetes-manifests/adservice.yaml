@@ -99,7 +99,7 @@ spec:
               - all
           privileged: false
         #   readOnlyRootFilesystem: true
-        image: ghcr.io/dd-japan/ctf-swagstore/adservice:latest
+        image: gcr.io/google-samples/microservices-demo/adservice:v0.10.1
         #image: adservice
         ports:
         - containerPort: 9555

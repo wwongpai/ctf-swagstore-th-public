@@ -52,7 +52,7 @@ spec:
         #       - all
         #   privileged: false
         #   readOnlyRootFilesystem: true
-        image: ghcr.io/dd-japan/ctf-swagstore/recommendationservice:latest
+        image: gcr.io/google-samples/microservices-demo/recommendationservice:v0.10.1
         #image: recommendationservice
         ports:
         - containerPort: 8080
