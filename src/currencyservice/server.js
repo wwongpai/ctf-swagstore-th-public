@@ -129,8 +129,29 @@ function convert (call, callback) {
     _getCurrencyData((data) => {
       const request = call.request;
 
+      // Validate request
+      if (!request || !request.from) {
+        logger.error('conversion request failed: missing "from" field');
+        callback(null, { units: 0, nanos: 0, currency_code: request?.to_code || 'USD' });
+        return;
+      }
+
       // Convert: from_currency --> EUR
       const from = request.from;
+      
+      // Validate from object has required fields
+      if (from.units === undefined || from.units === null) {
+        from.units = 0;
+      }
+      if (from.nanos === undefined || from.nanos === null) {
+        from.nanos = 0;
+      }
+      if (!from.currency_code || !data[from.currency_code]) {
+        logger.error(`conversion request failed: invalid currency code "${from.currency_code}"`);
+        callback(null, { units: 0, nanos: 0, currency_code: request.to_code || 'USD' });
+        return;
+      }
+      
       const euros = _carry({
         units: from.units / data[from.currency_code],
         nanos: from.nanos / data[from.currency_code]
@@ -153,7 +174,10 @@ function convert (call, callback) {
     });
   } catch (err) {
     logger.error(`conversion request failed: ${err}`);
-    callback(err.message);
+    callback({
+      code: grpc.status.INTERNAL,
+      message: err?.message || 'Unknown error'
+    });
   }
 }
 
