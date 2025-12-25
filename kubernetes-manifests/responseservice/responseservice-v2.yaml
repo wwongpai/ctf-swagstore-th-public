@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: responseservice-v2
-          image: gcr.io/google-samples/microservices-demo/responseservice-v2:latest
+          image: asia-southeast1-docker.pkg.dev/datadog-sandbox/ctf-th/responseservice-v2:v1.0.0
           ports:
             - containerPort: 8080
           imagePullPolicy: Always

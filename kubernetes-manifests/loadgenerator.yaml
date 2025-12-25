@@ -67,7 +67,7 @@ spec:
               - all
           privileged: false
           readOnlyRootFilesystem: true
-        image: loadgenerator
+        image: asia-southeast1-docker.pkg.dev/datadog-sandbox/ctf-th/loadgenerator:v1.0.0
         env:
         - name: FRONTEND_ADDR
           value: "frontend:80"

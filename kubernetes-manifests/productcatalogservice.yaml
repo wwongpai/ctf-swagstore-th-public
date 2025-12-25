@@ -53,7 +53,7 @@ spec:
               - all
           privileged: false
           # readOnlyRootFilesystem: true
-        image: gcr.io/google-samples/microservices-demo/productcatalogservice:v0.10.1
+        image: asia-southeast1-docker.pkg.dev/datadog-sandbox/ctf-th/productcatalogservice:v1.0.0
         #image: productcatalogservice
         ports:
         - containerPort: 3550

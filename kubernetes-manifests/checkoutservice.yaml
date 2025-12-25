@@ -53,7 +53,7 @@ spec:
                 - all
             privileged: false
             # readOnlyRootFilesystem: true
-          image: gcr.io/google-samples/microservices-demo/checkoutservice:v0.10.1
+          image: asia-southeast1-docker.pkg.dev/datadog-sandbox/ctf-th/checkoutservice:v1.0.0
           #image: checkoutservice
           ports:
           - containerPort: 5050
